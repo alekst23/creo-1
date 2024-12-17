@@ -4,7 +4,7 @@ import asyncio
 from aio_pika import connect, Message
 import json
 
-from .messenger_base import MessengerBase
+from messenger.messenger_base import MessengerBase
 from .llm.llm_client import LLMClient
 from .vision import VisionClientBase
 from .manager import Manager
@@ -25,10 +25,8 @@ class MessageBot():
 
         self.manager = Manager(self.publish_to_rabbitmq, client_cls(), vision_cls())
 
-
     async def setup(self):
         await self.start_rabbitmq_consumer()
-
 
     async def start_rabbitmq_consumer(self):
         self.rabbitmq_connection = await connect(host=os.getenv('RABBITMQ_HOST'))
@@ -38,11 +36,6 @@ class MessageBot():
             'QUEUE_OUTPUT',
             'QUEUE_INPUT',
             'MAIN_INPUT',
-            'VISION',
-            'VISION_OUTPUT',
-            'MOVE',
-            'NPC',
-            'ITEM'
         ]
         async def consume_queue(queue_name):
             queue = await self.rabbitmq_channel.declare_queue(queue_name, durable=True)
@@ -55,7 +48,6 @@ class MessageBot():
         # Gather all the consumer tasks to run them concurrently
         await asyncio.gather(*tasks)
 
-
     async def publish_to_rabbitmq(self, message_content, routing_key):
         if not self.rabbitmq_channel or self.rabbitmq_channel.is_closed:
             await self.setup()
@@ -65,7 +57,6 @@ class MessageBot():
             message, routing_key=routing_key
         )
         print(f"Message sent to RabbitMQ: [{routing_key}]: {message_content}")
-
 
     async def on_rabbitmq_message(self, message):
         print(f"Message received from RabbitMQ: [{message.routing_key}]:\n{message.body.decode()}")
@@ -82,29 +73,13 @@ class MessageBot():
                 case 'MAIN_INPUT':
                     # Input to Main handler
                     await self.manager.handle_main(message.body.decode())
-                case 'VISION':
-                    await self.manager.handle_vision(message.body.decode())
-                case 'VISION_OUTPUT':
-                    try:
-                        data = json.loads(message.body.decode())
-                        await self.messenger.send_user_image(data['image_url'], data.get('description'))
-                    except json.JSONDecodeError:
-                        await self.messenger.send_user_image(message.body.decode())
-                case 'MOVE':
-                    await self.manager.handle_move(message.body.decode())
-                case 'NPC':
-                    await self.manager.handle_npc(message.body.decode())
-                case 'ITEM':
-                    await self.manager.handle_item(message.body.decode())
-
-
+                
     async def receive_user_message(self, message: str):
         if message.startswith('!'):
             await self.manager.handle_command(message)
         else:
             await self.publish_to_rabbitmq(message, 'QUEUE_INPUT')
 
-    
     def run(self):
         # Run the bot
         asyncio.run(self.setup())

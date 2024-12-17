@@ -46,9 +46,6 @@ class DiscordMessenger(commands.Bot, MessengerBase):
         await self.send_user_message(f'Logged in as {self.user}!')
 
     async def send_discord_message(self, message, channel_id=CHANNEL_ID):
-        # client = channel.guild.me.guild.client
-        # if not client.is_ready():
-        #     await client.wait_until_ready()
         channel = self.get_channel(int(channel_id))
         if not channel:
             print(f"Channel not found: {channel_id}")
