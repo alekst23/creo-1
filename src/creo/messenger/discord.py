@@ -4,7 +4,7 @@ from discord.ext import commands
 import dotenv
 import logging
 
-from .messenger_base import MessengerBase
+from .base import MessengerBase
 
 logging.basicConfig(level=logging.ERROR)
 dotenv.load_dotenv('.env')
@@ -32,11 +32,6 @@ class DiscordMessenger(commands.Bot, MessengerBase):
         # if this message is not in the channel, ignore it
         if message.channel.id != CHANNEL_ID:
             return
-
-        # # Check if the message starts with the command prefix
-        # if message.content.startswith(self.command_prefix):
-        #     await self.process_commands(message)
-        #     return
         
         # All else: send the message to the bot
         await self.receive_user_message(message.content)
@@ -60,7 +55,6 @@ class DiscordMessenger(commands.Bot, MessengerBase):
             while n < len(message):
                 await channel.send(message[n:n+MAX_MESSAGE_LENGTH])
                 n += MAX_MESSAGE_LENGTH
-
 
     async def send_user_message(self, message):
         await self.send_discord_message(message)

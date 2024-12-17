@@ -8,7 +8,6 @@ from .data.types import (
     OutputType,
 )
 from .llm.llm_client import LLMClient
-from .vision import VisionClientBase
 from .agent.agent_main import MainAgent
 
 from logging import getLogger
@@ -19,14 +18,12 @@ class Manager():
     data: DataModel
     publish_to_rabbitmq: Callable
     client: LLMClient
-    vision: Optional[VisionClientBase]
     agent: MainAgent
 
-    def __init__(self, publish_to_rabbitmq: Callable, client: LLMClient, vision: VisionClientBase=None, thread_id: str=None):
+    def __init__(self, publish_to_rabbitmq: Callable, client: LLMClient, thread_id: str=None):
         self.data = DataModel()
         self.publish_message = publish_to_rabbitmq
         self.client = client
-        self.vision = vision
 
         if thread_id:
             self.new_session(thread_id)

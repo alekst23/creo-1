@@ -4,9 +4,8 @@ import asyncio
 from aio_pika import connect, Message
 import json
 
-from messenger.messenger_base import MessengerBase
+from creo.messenger.base import MessengerBase
 from .llm.llm_client import LLMClient
-from .vision import VisionClientBase
 from .manager import Manager
 
 from logging import getLogger, INFO
@@ -16,14 +15,14 @@ logger.setLevel(INFO)
 dotenv.load_dotenv('.env')
 
 class MessageBot():
-    def __init__(self, messenger_cls: MessengerBase, client_cls: LLMClient, vision_cls: VisionClientBase):
+    def __init__(self, messenger_cls: MessengerBase, client_cls: LLMClient):
         self.messenger = messenger_cls(self.receive_user_message)
 
         self.loop = asyncio.get_event_loop()
         self.rabbitmq_connection = None
         self.rabbitmq_channel = None
 
-        self.manager = Manager(self.publish_to_rabbitmq, client_cls(), vision_cls())
+        self.manager = Manager(self.publish_to_rabbitmq, client_cls())
 
     async def setup(self):
         await self.start_rabbitmq_consumer()
